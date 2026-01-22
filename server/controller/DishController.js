@@ -1,13 +1,11 @@
-const express=require('express');
-const router=express.Router();
-const dishModel=require('../models/dish');
+const dishModel = require('../models/dish');
 
-router.post('/add-dish', async (req,res) => {
+const addDish = async (req,res) => {
     try
     {
         let dish=req.body;
-        let DishModel=new dishModel(dish);
-        await DishModel.save();
+        let newDish=new dishModel(dish);
+        await newDish.save();
         res.status(200).json({
             success:true,
             message:'Dish added successfullly'
@@ -22,9 +20,9 @@ router.post('/add-dish', async (req,res) => {
         });
     }
 
-})
+}
 
-router.get('/dishes', async (req,res) =>{
+const Dishes = async (req,res) =>{
     try
     {
         const dishes=await dishModel.find();
@@ -32,22 +30,30 @@ router.get('/dishes', async (req,res) =>{
     }
     catch(error)
     {
-        console.log('Failed to fetch dishes'+error);
+        console.error("Failed to fetch dishes", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch dishes"
+        });
     }
-})
+}
 
-router.patch('/update-dish/:id', async (req,res) => {
+const updateDish = async (req,res) => {
 
     try
     {
         const { id }=req.params;
-        const updateDish=await dishModel.findByIdAndUpdate(id,req.body);
+        const updatedDish=await dishModel.findByIdAndUpdate(
+            id,
+            req.body,
+            {new:true, runValidators:true}
+        );
 
-        if(!updateDish)
+        if(!updatedDish)
         {
             return res.status(404).json({
                 success:false,
-                message:'Failed to update dish'
+                message:'Dish not found'
             });
         }
         
@@ -65,15 +71,15 @@ router.patch('/update-dish/:id', async (req,res) => {
             message:'Failed to update dish'
         });
     }
-})
+}
 
-router.delete('/delete-dish/:id', async (req,res) => {
+const deleteDish = async (req,res) => {
     try
     {
         const { id }= req.params;
-        const deleteDish=await dishModel.findByIdAndDelete(id);
+        const deletedDish=await dishModel.findByIdAndDelete(id);
         
-        if(!deleteDish)
+        if(!deletedDish)
         {
             return res.status(404).json({
                 success:false,
@@ -95,6 +101,6 @@ router.delete('/delete-dish/:id', async (req,res) => {
         });
     }
 
-})
+}
 
-module.exports=router;
+module.exports={addDish,Dishes,updateDish,deleteDish}

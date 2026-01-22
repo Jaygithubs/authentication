@@ -5,6 +5,7 @@ const app=express();
 const connectDB=require('./config/db');
 const cors=require('cors');
 
+
 app.use(express.json());
 app.use(cors({
     origin: process.env.ORIGIN
@@ -15,7 +16,9 @@ app.get('/',(req,res) => {
     res.send("Welcome to Jay's project");
 })
 
-app.use('/api',require('./routes/addDish'));
+app.use('/api', require('./routes/Dish'));
+app.use('/api', require('./routes/authRoutes'));
+
 
 const PORT = process.env.PORT | 5000;
 app.listen(PORT,() => {
