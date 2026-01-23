@@ -1,15 +1,10 @@
 'use client'
 
 import { useEffect,useState } from "react";
-import { json } from "stream/consumers";
 
 const page = () => {
     
-    interface Dish {
-      _id: string;
-      dish: string;
-    }
-    const [dishes, setDishes] = useState<Dish[]>([]);
+    const [dishes, setDishes] = useState([]);
     const [dish,setDish]=useState('');
     const [isEditing,setIsediting]=useState(false);
     const [editDish,seteditDish]=useState('');
@@ -55,7 +50,7 @@ const page = () => {
         }
     }
 
-    const DeleteDish = async (id:string) => {
+    const DeleteDish = async (id) => {
         try
         {
             const res=await fetch(`http://localhost:5000/api/delete-dish/${id}`,{
