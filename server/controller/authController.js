@@ -149,4 +149,67 @@ const loginUser = async (req,res) => {
 
 }
 
-module.exports={getUsers,registerUser,loginUser}
+const verifyEmail = async (req,res) => {
+
+    try {
+    const { token } = req.body;
+
+    // 1️⃣ token present
+    if (!token) {
+      return res.status(400).json({
+        success: false,
+        message: "Verification token is required"
+      });
+    }
+
+    // 2️⃣ hash token
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(token)
+      .digest("hex");
+
+    // 3️⃣ find user + check expiry
+    const user = await User.findOne({
+      emailVerificationToken: hashedToken,
+      emailVerificationExpires: { $gt: Date.now() }
+    });
+
+    // 4️⃣ user exists
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired verification token"
+      });
+    }
+
+    // 5️⃣ already verified?
+    if (user.emailVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Email already verified"
+      });
+    }
+
+    // 6️⃣ mark verified
+    user.emailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpires = undefined;
+
+    await user.save();
+
+    // 7️⃣ success
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully"
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Email verification failed",
+      error: error.message
+    });
+  }
+} 
+
+module.exports={getUsers,registerUser,loginUser,verifyEmail}

@@ -23,7 +23,7 @@ const emailVerificationTemplate = (name, verifyLink) => {
 
                 <div style="text-align:center; margin:30px 0;">
                   <a href="${verifyLink}"
-                     style="background:#ef9815; color:#ffffff; padding:12px 24px;
+                     style="background:lab(64 44.36 71.55); color:#ffffff; padding:12px 24px;
                             text-decoration:none; border-radius:5px; font-weight:bold;">
                     Verify Email
                   </a>
