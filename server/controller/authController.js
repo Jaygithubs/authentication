@@ -1,6 +1,9 @@
 const User = require('../models/Users');
 const bcrypt = require("bcryptjs");
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const sendEmail = require('../utils/emailSend');
+const emailVerificationTemplate = require('../utils/emailVerificationTemplate');
 
 const getUsers = async (req,res) => {
     const users = await User.find();
@@ -39,15 +42,36 @@ const registerUser = async (req,res) => {
         finalRole = "Delivery";
         }
 
+        // generate email verification token
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        const emailVerificationToken = crypto
+        .createHash('sha256')
+        .update(verificationToken)
+        .digest('hex');
+        const emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000;
+
         const newUser = new User({
             name,
             email,
             password:hashedPassword,
             phone,
             address,
-            role:finalRole
+            role:finalRole,
+            emailVerified:false,
+            emailVerificationToken:emailVerificationToken,
+            emailVerificationExpires:emailVerificationExpires
         });
+
         await newUser.save();
+
+        // sending verification email here
+        const verifyLink = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+        const html = emailVerificationTemplate(name,verifyLink);
+        await sendEmail({
+            to:email,
+            subject:'Email Verification',
+            html:html
+        });
 
         res.status(201).json({
             success:true,
@@ -58,7 +82,8 @@ const registerUser = async (req,res) => {
     {
         res.status(500).json({
             success:false,
-            message:'Sign up failed'
+            message:'Sign up failed',
+            error:err.message
         })
     }
 
@@ -89,6 +114,14 @@ const loginUser = async (req,res) => {
                 message:'Invalid email or password'
             })
         }
+
+        if (!isUserExists.emailVerified) {
+        return res.status(401).json({
+            success: false,
+            message: "Please verify your email first"
+        });
+        }
+
 
         // create JWT token
         const token = jwt.sign(
